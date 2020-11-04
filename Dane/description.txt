@@ -1,0 +1,26 @@
+Dataset description:
+
+History of internal e-mail communication (sender, recipient, datetime)
+between employees of a mid-sized manufacturing company. Multiple recipients
+of the same e-mail (To, CC, BCC) are represented as separate rows without
+distinguishing the recipient type. The period covered are nine full months
+of 2010 starting from 2010-01-01 to 2010-09-30 (event dates in local time).
+The file containing the communication events is named communication.csv.
+
+Apart from the communication, information about who in the company reports
+to whom is attached (reportsto.csv). Node #86 is CEO (the only loop in the graph).
+
+==========================
+Citation:
+
+When using this dataset, please cite:
+
+Nurek, Mateusz, and Radosław Michalski. "Combining Machine Learning and Social Network Analysis to Reveal the Organizational Structures." Applied Sciences 10, no. 5 (2020): 1699, DOI 10.3390/app10051699
+
+or use the included BibTeX file (nurek2020combining.bib).
+
+==========================
+Contact:
+
+e-mail: radoslaw.michalski <at> pwr.edu.pl
+web: http://www.ii.pwr.edu.pl/~michalski
