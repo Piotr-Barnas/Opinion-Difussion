@@ -9,7 +9,9 @@ Created on Sat Oct 31 21:49:43 2020
 import pandas as pd
 import igraph as ig
 import numpy as np
-import louvain
+import leidenalg
+import itertools as itl
+from copy import deepcopy
 
 
 def is_integer(n):
@@ -53,12 +55,14 @@ weights = np.nan_to_num(weights)
 
 for k in range(0, len(reportsto['ID'])):
     for l in range(0, len(reportsto['ID'])):
+        if k == l:
+            pass
         if weights[k][l] != 0:
             g.add_edge(k, l, weights = weights[k][l])
 
 g.delete_vertices(ndls_ids)
 
-layout = g.layout("rt")
+layout = g.layout("tree") #tree / grid_fr      kk (?)
 visual_style = {}
 visual_style["vertex_size"] = 20
 #visual_style["vertex_color"] = [color_dict[gender] for gender in g.vs["gender"]]
@@ -69,7 +73,15 @@ visual_style["bbox"] = (1200, 1200)
 visual_style["margin"] = 20
 ig.plot(g, **visual_style).show()
 
-partition = louvain.find_partition(g, louvain.ModularityVertexPartition)
-print(partition)
+partition = leidenalg.find_partition(g, leidenalg.ModularityVertexPartition)
+print(partition.modularity)
 
 ig.plot(partition, **visual_style).show()
+
+pairs = list(itl.permutations(act_emp_rep['ID'][0:10], 2))
+
+for m in range (len(pairs)):
+    g_new = deepcopy(g)
+    g_new.add_edge(pairs[m][0], pairs[m][1], weights = np.mean(g.es['weights']))
+    print(leidenalg.find_partition(g_new, leidenalg.ModularityVertexPartition).modularity)
+
