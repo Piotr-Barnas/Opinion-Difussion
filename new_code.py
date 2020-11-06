@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Oct 31 21:49:43 2020
+Created on Fri Nov  6 21:39:34 2020
 
 @author: barni13
 """
@@ -46,7 +46,12 @@ act_emp_mails = communication[communication['Sender'].isin(ndls_ids).apply(int) 
 
 mail_counter = np.zeros((len(reportsto['ID']), len(reportsto['ID'])))
 
-g = ig.Graph(len(reportsto['ID']))
+g = ig.Graph()
+
+for emp in reportsto['ID']:
+    g.add_vertex(name = str(emp))
+
+
 for i in range(0, len(communication)):
     mail_counter[communication.iloc[i]['Sender']][communication.iloc[i]['Recipient']] =+ 1
 
@@ -58,7 +63,7 @@ for k in range(0, len(reportsto['ID'])):
         if k == l:
             pass
         if weights[k][l] != 0:
-            g.add_edge(k, l, weights = weights[k][l])
+            g.add_edge(str(k), str(l), weights = weights[k][l])
 
 g.delete_vertices(ndls_ids)
 
@@ -84,7 +89,7 @@ modularities = []
 
 for m in range (len(pairs)):
     g_new = deepcopy(g)
-    g_new.add_edge(pairs[m][0], pairs[m][1], weights = np.mean(g.es['weights']))
+    g_new.add_edge(str(pairs[m][0]), str(pairs[m][1]), weights = np.mean(g.es['weights']))
     modularities.append(leidenalg.find_partition(g_new, leidenalg.ModularityVertexPartition).modularity)
 
 max(modularities)
