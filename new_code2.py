@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Oct 31 21:49:43 2020
+Created on Fri Nov  6 22:06:10 2020
 
 @author: barni13
 """
+
 
 import pandas as pd
 import igraph as ig
@@ -44,24 +45,27 @@ act_emp_rep = reportsto[~reportsto['ID'].isin(ndls_ids)] #"reportsto" containing
 act_emp_mails = communication[communication['Sender'].isin(ndls_ids).apply(int) + communication['Recipient'].isin(ndls_ids).apply(int) == 0] 
 
 
-mail_counter = np.zeros((len(reportsto['ID']), len(reportsto['ID'])))
+mail_counter = np.zeros((len(act_emp_rep['ID']), len(act_emp_rep['ID'])))
 
-g = ig.Graph(len(reportsto['ID']), directed = 'True')
+g = ig.Graph()
 
-for i in range(0, len(communication)):
-    mail_counter[communication.iloc[i]['Sender']][communication.iloc[i]['Recipient']] =+ 1
+for emp in act_emp_rep['ID']:
+    g.add_vertex(name = str(emp))
+
+
+for i in range(0, len(act_emp_mails)):
+    mail_counter[str(act_emp_mails.iloc[i]['Sender'])][str(act_emp_mails.iloc[i]['Recipient'])] =+ 1
 
 weights = mail_counter/mail_counter.sum(axis=1, keepdims=True)
 weights = np.nan_to_num(weights)
 
-for k in range(0, len(reportsto['ID'])):
-    for l in range(0, len(reportsto['ID'])):
+for k in range(0, len(act_emp_rep['ID'])):
+    for l in range(0, len(ract_emp_rep['ID'])):
         if k == l:
             pass
         if weights[k][l] != 0:
-            g.add_edge(k, l, weights = weights[k][l])
+            g.add_edge(str(k), str(l), weights = weights[k][l])
 
-g.delete_vertices(ndls_ids)
 
 layout = g.layout("tree") #tree / grid_fr      kk (?)
 visual_style = {}
@@ -85,7 +89,7 @@ modularities = []
 
 for m in range (len(pairs)):
     g_new = deepcopy(g)
-    g_new.add_edge(pairs[m][0], pairs[m][1], weights = np.mean(g.es['weights']))
+    g_new.add_edge(str(pairs[m][0]), str(pairs[m][1]), weights = np.mean(g.es['weights']))
     modularities.append(leidenalg.find_partition(g_new, leidenalg.ModularityVertexPartition).modularity)
 
 max(modularities)

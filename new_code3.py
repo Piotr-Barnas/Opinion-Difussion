@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Nov  6 21:39:34 2020
+Created on Sat Nov  7 18:49:44 2020
 
 @author: barni13
 """
@@ -9,7 +9,7 @@ Created on Fri Nov  6 21:39:34 2020
 import pandas as pd
 import igraph as ig
 import numpy as np
-import leidenalg as la
+import leidenalg
 import itertools as itl
 from copy import deepcopy
 
@@ -26,6 +26,10 @@ def is_integer(n):
 def find_best_new_edge(graph, n):
     """finds among all possible pairs n edges with maxiumum modularity"""
     pairs = list(itl.permutations(graph.vs['name'], 2))
+    edges_in_graph = [(x['name'], y['name']) for (x, y) in [e.vertex_tuple for e in graph.es]]
+    for pair in edges_in_graph:
+        pairs.remove(pair)
+    
     
     best_pairs = []
     best_modularities = []
@@ -33,10 +37,11 @@ def find_best_new_edge(graph, n):
     i = 0
     while i < n:
         modularities = []
-        for m in range(len(pairs)): 
-            new_graph = deepcopy(g)
+        for m in range(len(pairs)):
+            new_graph = deepcopy(graph)
             new_graph.add_edge(pairs[m][0], pairs[m][1], weights = np.mean(graph.es['weights']))
-            modularities.append(leidenalg.find_partition(new_graph, leidenalg.ModularityVertexPartition).modularity)
+            modularities.append(leidenalg.find_partition(new_graph, leidenalg.ModularityVertexPartition).quality)
+        print(modularities)
         graph.add_edge(pairs[modularities.index(max(modularities))][0], pairs[modularities.index(max(modularities))][1], weights = np.mean(graph.es['weights']))
         best_pairs.append(pairs[modularities.index(max(modularities))])
         best_modularities.append(max(modularities))
@@ -107,12 +112,12 @@ visual_style["layout"] = layout
 visual_style["bbox"] = (1200, 1200)
 visual_style["margin"] = 20
 
-ig.plot(g, **visual_style).show()
+#ig.plot(g, **visual_style).show()
 
 #partition of base graph
-partition = la.find_partition(g, la.ModularityVertexPartition)
-print(partition.modularity)
-ig.plot(partition, **visual_style).show()
+partition = leidenalg.find_partition(g, leidenalg.ModularityVertexPartition)
+print(partition.quality)
+#ig.plot(partition, **visual_style).show()
 
 """
 #edge appending
@@ -128,4 +133,4 @@ max(modularities)
 pairs[modularities.index(max(modularities))]
 """
 
-find_best_new_edge(g, 1)
+find_best_new_edge(g, 3)
