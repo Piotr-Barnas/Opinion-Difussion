@@ -40,7 +40,7 @@ def find_best_new_edge(graph, n):
         for m in range(len(pairs)):
             new_graph = deepcopy(graph)
             new_graph.add_edge(pairs[m][0], pairs[m][1], weights = np.mean(graph.es['weights']))
-            modularities.append(leidenalg.find_partition(new_graph, leidenalg.ModularityVertexPartition).quality)
+            modularities.append(leidenalg.find_partition(new_graph, leidenalg.ModularityVertexPartition).quality())
         print(modularities)
         graph.add_edge(pairs[modularities.index(max(modularities))][0], pairs[modularities.index(max(modularities))][1], weights = np.mean(graph.es['weights']))
         best_pairs.append(pairs[modularities.index(max(modularities))])
@@ -133,4 +133,4 @@ max(modularities)
 pairs[modularities.index(max(modularities))]
 """
 
-find_best_new_edge(g, 3)
+find_best_new_edge(g, 5)
