@@ -25,14 +25,15 @@ def is_integer(n):
     else:
         return float(n).is_integer()
     
-def find_best_new_edge(graph = g, n = 15, k = 3):
-    """finds among all possible pairs, n edges with maxiumum modularity.
-       recalculating modularities after adding k best edges"""
+def find_best_new_edges(graph, n = 15, k = 3):
+    """finds among graph' all pairs without connection, n edges with maxiumum modularity.
+       recalculating modularities after adding k best edges.
+       
+       Function call adds edges to graph given as a parametr"""
     pairs = list(itl.combinations(graph.vs['name'], 2))
     edges_in_graph = [(x['name'], y['name']) for (x, y) in [e.vertex_tuple for e in graph.es]]
     for pair in edges_in_graph:
         pairs.remove(pair)
-    
     
     best_pairs = []
     best_modularities = []
@@ -48,7 +49,7 @@ def find_best_new_edge(graph = g, n = 15, k = 3):
             for _ in range(k):
                 graph.add_edge(pairs[modularities.index(max(modularities))][0], pairs[modularities.index(max(modularities))][1])
                 best_pairs.append(pairs[modularities.index(max(modularities))])
-                best_modularities.append(max(modularities))
+                best_modularities.append(louvain.find_partition(graph, louvain.ModularityVertexPartition).quality())
                 pairs.remove(pairs[modularities.index(max(modularities))])
                 modularities.remove(max(modularities))
                 i += 1
@@ -56,11 +57,30 @@ def find_best_new_edge(graph = g, n = 15, k = 3):
             for _ in range(n - i):
                 graph.add_edge(pairs[modularities.index(max(modularities))][0], pairs[modularities.index(max(modularities))][1])
                 best_pairs.append(pairs[modularities.index(max(modularities))])
-                best_modularities.append(max(modularities))
+                best_modularities.append(louvain.find_partition(graph, louvain.ModularityVertexPartition).quality())
                 pairs.remove(pairs[modularities.index(max(modularities))])
                 modularities.remove(max(modularities))
-                i += i      
+                i += 1
     return (best_pairs, best_modularities, i)
+
+def find_random_new_edges(graph, n = 20):
+    """finds among graph' all pairs without connection, n random edges.
+       Function call adds edges to graph given as a parametr"""
+    random_pairs = []   
+       
+    pairs = list(itl.combinations(graph.vs['name'], 2))
+    edges_in_graph = [(x['name'], y['name']) for (x, y) in [e.vertex_tuple for e in graph.es]]
+    for pair in edges_in_graph:
+        pairs.remove(pair)
+    for rand in np.random.choice(len(pairs) - 1, n, replace = False):
+        random_pairs.append(pairs[rand])
+        graph.add_edge(pairs[rand][0], pairs[rand][1])
+    return random_pairs
+        
+        
+    
+        
+    
 
 def independent_cascades(graph, initial):
     k = 0
@@ -76,7 +96,7 @@ def independent_cascades(graph, initial):
             for ngbr in [graph.vs.select(x)['name'][0] for x in graph.neighbors(emp, mode = 'out')]:
                 if ngbr not in all_influenced:
                     rand = np.random.uniform()
-                    if rand < 0.5:
+                    if rand < graph.es[graph.get_eid(emp, ngbr)]['weights']:
                         influenced_in_k.append(ngbr)
                         all_influenced.append(ngbr)
                         graph.vs.select(name = ngbr)['influenced'] = 1
@@ -123,11 +143,9 @@ weights = np.nan_to_num(weights)
 #graph, vertices and edges
 g = ig.Graph()
 
-
 for emp in reportsto['ID']:
     g.add_vertex(name = str(emp))
 
-list_both_sides = []
 for k in range(0, len(reportsto['ID'])):
     for l in range(k + 1, len(reportsto['ID'])):
         if mail_counter[k][l] == 0 or mail_counter[l][k] == 0:
@@ -135,7 +153,7 @@ for k in range(0, len(reportsto['ID'])):
         else:
             both_sides = mail_counter[k][l] + mail_counter[l][k]
             list_both_sides.append(both_sides)
-            if both_sides >= 30:
+            if both_sides >= 20:
                 g.add_edge(str(k), str(l))
             
 ##########################################################################################        
@@ -143,18 +161,28 @@ for k in range(0, len(reportsto['ID'])):
 ##########################################################################################
 """
 thresholds = []
-above_trsh = []        
+above_trsh = []
+    
 for threshold in np.linspace(min(list_both_sides), max(list_both_sides), 1000):
     thresholds.append(threshold)
     above_trsh.append(len([x for x in list_both_sides if x >= threshold]))
 
 plt.figure()
 plt.plot(thresholds, [x / len(g.vs['name']) for x in above_trsh])
+plt.yscale('log')
+plt.show()
 
 [x / len(g.vs['name']) for x in above_trsh].index(2)
 
 plt.figure()
-plt.plot(thresholds[0:18], [x / len(g.vs['name']) for x in above_trsh][0:18])
+plt.plot(thresholds[0:20], [x / len(g.vs['name']) for x in above_trsh][0:20])
+plt.yscale('log')
+plt.show()
+
+plt.figure()
+plt.plot(thresholds[0:400], [x / len(g.vs['name']) for x in above_trsh][0:400])
+plt.yscale('log')
+plt.show()
 """
 #########################################################################################
 
@@ -183,7 +211,7 @@ ig.plot(g2, **visual_style).save("/home/barni13/Desktop/Studia/Semestr 7/Praca D
 #partition of base graph
 partition = louvain.find_partition(g2, louvain.ModularityVertexPartition)
 print(partition.quality())
-ig.plot(partition, **visual_style).save("/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/partition_graph.png")
+ig.plot(partition, **visual_style).save("/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/partition_initial_graph.png")
 
 
 
@@ -201,5 +229,93 @@ max(modularities)
 pairs[modularities.index(max(modularities))]
 """
 
-find_best_new_edge(g, 20, 3) 
+partition = louvain.find_partition(g, louvain.ModularityVertexPartition)
+print(partition.quality())
 
+g3 = deepcopy(g)
+g4 = deepcopy(g)
+
+best_edges = find_best_new_edges(g3, 100, 10)
+random_edges = find_random_new_edges(g4, 100)
+
+#partition of modified graph
+partition2 = louvain.find_partition(g3, louvain.ModularityVertexPartition)
+print(partition2.quality())
+ig.plot(partition2, **visual_style).save("/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/partition_modified_graph.png")
+
+#partition of randomly modified graph
+partition3 = louvain.find_partition(g4, louvain.ModularityVertexPartition)
+print(partition3.quality())
+ig.plot(partition3, **visual_style).save("/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/partition_randomly_modified_graph.png")
+
+
+
+
+# 5% -> -10, 10% -> -19
+di_g = ig.Graph(directed = True)
+di_g.add_vertices(list(g.vs["name"]))
+
+for x in g.es:
+    di_g.add_edge(x.tuple[0], x.tuple[1], weights = weights[x.tuple[0]][x.tuple[1]])
+    di_g.add_edge(x.tuple[1], x.tuple[0], weights = weights[x.tuple[1]][x.tuple[0]])
+    
+    
+di_g.vs["closeness"] = di_g.closeness()
+di_g.vs["betweenness"] = di_g.betweenness() 
+#di_g.vs["clustering_coef] = ...
+di_g.vs["indegree"] = di_g.indegree()
+di_g.vs["outdegree"] = di_g.outdegree()
+di_g.vs["degree"] = di_g.degree()
+    
+# 5% of the best nodes
+di_g_1 = deepcopy(di_g)
+closeness5 = di_g_1.vs.select(lambda x:x["closeness"] > sorted(di_g_1.closeness())[-8])
+closeness5_IC = independent_cascades(di_g_1, closeness5["name"])
+print(len(closeness5_IC[0]), len(closeness5_IC[1]))
+
+di_g_2 = deepcopy(di_g)
+betweenness5 = di_g_2.vs.select(lambda x:x["betweenness"] > sorted(di_g_2.betweenness())[-8])
+betweenness5_IC = independent_cascades(di_g_2, betweenness5["name"])
+print(len(betweenness5_IC[0]), len(betweenness5_IC[1]))
+
+di_g_3 = deepcopy(di_g)
+indegree5 = di_g_3.vs.select(lambda x:x["indegree"] > sorted(di_g_3.indegree())[-8])
+indegree5_IC = independent_cascades(di_g_3, indegree5["name"])
+print(len(indegree5_IC[0]), len(indegree5_IC[1]))
+
+di_g_4 = deepcopy(di_g)
+outdegree5 = di_g_4.vs.select(lambda x:x["outdegree"] > sorted(di_g_4.outdegree())[-8])
+outdegree5_IC = independent_cascades(di_g_4, indegree5["name"])
+print(len(outdegree5_IC[0]), len(outdegree5_IC[1]))
+
+di_g_5 = deepcopy(di_g)
+degree5 = di_g_5.vs.select(lambda x:x["degree"] > sorted(di_g_5.degree())[-8])
+degree5_IC = independent_cascades(di_g_5, indegree5["name"])
+print(len(degree5_IC[0]), len(degree5_IC[1]))
+
+# 10% of the best nodes
+
+di_g_6 = deepcopy(di_g)
+closeness10 = di_g.vs.select(lambda x:x["closeness"] > sorted(di_g.closeness())[-16])
+closeness10_IC = independent_cascades(di_g_6, closeness10["name"])
+print(len(closeness10_IC[0]), len(closeness10_IC[1]))
+
+di_g_7 = deepcopy(di_g)
+betweenness10 = di_g.vs.select(lambda x:x["betweenness"] > sorted(di_g.betweenness())[-16])
+betweenness10_IC = independent_cascades(di_g_7, betweenness10["name"])
+print(len(betweenness10_IC[0]), len(betweenness10_IC[1]))
+
+di_g_8 = deepcopy(di_g)
+indegree10 = di_g.vs.select(lambda x:x["indegree"] > sorted(di_g.indegree())[-16])
+indegree10_IC = independent_cascades(di_g_8, indegree10["name"])
+print(len(indegree10_IC[0]), len(indegree10_IC[1]))
+
+di_g_9 = deepcopy(di_g)
+outdegree10 = di_g.vs.select(lambda x:x["outdegree"] > sorted(di_g.outdegree())[-16])
+outdegree10_IC = independent_cascades(di_g_9, indegree10["name"])
+print(len(outdegree10_IC[0]), len(outdegree10_IC[1]))
+
+di_g_10 = deepcopy(di_g)
+degree10 = di_g.vs.select(lambda x:x["degree"] > sorted(di_g.degree())[-16])
+degree10_IC = independent_cascades(di_g_10, indegree10["name"])
+print(len(degree10_IC[0]), len(degree10_IC[1]))
