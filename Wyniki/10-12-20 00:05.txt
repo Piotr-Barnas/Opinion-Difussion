@@ -1,0 +1,30 @@
+('data', '10-12-20 00:00')
+
+('threshold', 20)
+
+('Max nowych krawędzi', 2)
+
+('Ile krawędzi jest dodawanych w jednej iteracji:', 2)
+
+('graf bazowy:', <igraph.Graph object at 0x7fc19a77e138>)
+
+('graf z randomowymi krawędziami', <igraph.Graph object at 0x7fc19a217318>)
+
+('graf z najlepszymi krawędziami', <igraph.Graph object at 0x7fc19a217e58>)
+
+('digraf bazowy:', <igraph.Graph object at 0x7fc197959138>)
+
+('modularność grafu z randomowymi krawędziami', [0.30233679877387154, 0.2897299619014443, 0.30427137797267667])
+
+('modularność grafu z najlepszymi krawędziami', [0.31193118625217015, 0.3071550203682692, 0.2966849384381852])
+
+('Miary:', ['closeness', 'betweenness', 'indegree', 'outdegree', 'degree'])
+
+('Grupa inizializująca dla 5% próby', [<igraph.VertexSeq object at 0x7fc197950638>, <igraph.VertexSeq object at 0x7fc197950548>, <igraph.VertexSeq object at 0x7fc1979504f8>, <igraph.VertexSeq object at 0x7fc197950598>, <igraph.VertexSeq object at 0x7fc1979507c8>])
+
+('Grupa inizializująca dla 10% próby', [<igraph.VertexSeq object at 0x7fc19a223458>, <igraph.VertexSeq object at 0x7fc197950908>, <igraph.VertexSeq object at 0x7fc197950868>, <igraph.VertexSeq object at 0x7fc197950778>, <igraph.VertexSeq object at 0x7fc197950818>])
+
+('wyniki modelu IC dla 5% inicjalnych węzłów', [('closeness', [2, 2, 7], [7, 7, 13]), ('betweenness', [4, 7, 5], [10, 16, 15]), ('indegree', [4, 6, 5], [8, 12, 11]), ('outdegree', [6, 4, 5], [17, 9, 10]), ('degree', [2, 3, 4], [6, 7, 9])])
+
+('wyniki modelu IC dla 10% inicjalnych węzłów', [('closeness', [4, 5, 7], [19, 22, 25]), ('betweenness', [5, 3, 8], [24, 16, 29]), ('indegree', [3, 3, 8], [16, 16, 30]), ('outdegree', [6, 3, 3], [22, 17, 17]), ('degree', [3, 4, 7], [19, 19, 29])])
+

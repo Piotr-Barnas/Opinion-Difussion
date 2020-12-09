@@ -87,7 +87,7 @@ def independent_cascades(graph, initial):
     influenced_in_k = initial
     for emp in initial:
         graph.vs.select(name = emp)['influenced'] = 1
-    while influenced_in_k != [] and k < 10:
+    while influenced_in_k != [] and k < 50:
         k = k + 1
         influenced_in_k = []
         for emp in initial:
