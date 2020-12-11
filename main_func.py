@@ -19,7 +19,7 @@ import os
 
 
 
-def wrapper(threshold = 20, N = 50, groups = 5, step = 1):
+def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     start_time = datetime.now().strftime("%d-%m-%y %H:%M")
     
     if not os.path.exists('/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/Wyniki/{}'.format(start_time)):
@@ -54,12 +54,15 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1):
     for emp in reportsto['ID']:
         g.add_vertex(name = str(emp))
     
+    list_both_sides = []
+    
     for k in range(0, len(reportsto['ID'])):
         for l in range(k + 1, len(reportsto['ID'])):
             if mail_counter[k][l] == 0 or mail_counter[l][k] == 0:
                 pass
             else:
                 both_sides = mail_counter[k][l] + mail_counter[l][k]
+                list_both_sides.append(both_sides)
                 if both_sides >= threshold:
                     g.add_edge(str(k), str(l))
     
@@ -70,6 +73,7 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1):
     
     rand_edges_mod = []
     best_edges_mod = []
+    
     
     IC_5 = [("closeness", [], []), ("betweenness", [], []), ("indegree", [], []), ("outdegree", [], []), ("degree", [], [])]
     IC_10 = [("closeness", [], []), ("betweenness", [], []), ("indegree", [], []), ("outdegree", [], []), ("degree", [], [])]
@@ -101,6 +105,8 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1):
         di_g.vs["outdegree"] = di_g.outdegree()
         di_g.vs["degree"] = di_g.degree()
         
+        
+        
         if n == 0:
             initial_grp_5 = []
         #5%
@@ -109,10 +115,15 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1):
             #selecting initial_grps
             if n == 0:
                 initial_grp_5.append(di_g_copy.vs.select(lambda x:x[metrics[i]] > sorted(di_g.vs[metrics[i]])[-8]))
-            ic5_res = independent_cascades(di_g_copy, initial_grp_5[i]["name"])
-            IC_5[i][1].append(len(ic5_res[0]))
-            IC_5[i][2].append(len(ic5_res[1]))
-        
+            tmp_res_1 = []
+            tmp_res_2 = []
+            for j in range(IC_loop):    
+                ic5_res = independent_cascades(di_g_copy, initial_grp_5[i]["name"])
+                tmp_res_1.append(len(ic5_res[0]))
+                tmp_res_2.append(len(ic5_res[1]))            
+            IC_5[i][1].append(sum(tmp_res_1)/len(tmp_res_1))
+            IC_5[i][2].append(sum(tmp_res_2)/len(tmp_res_2))
+    
         if n == 0:
             initial_grp_10 = []
         #10%
@@ -121,9 +132,14 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1):
             #selecting initial_grps
             if n == 0:  
                 initial_grp_10.append(di_g_copy.vs.select(lambda x:x[metrics[i]] > sorted(di_g.vs[metrics[i]])[-16]))
-            ic10_res = independent_cascades(di_g_copy, initial_grp_10[i]["name"])
-            IC_10[i][1].append(len(ic10_res[0]))
-            IC_10[i][2].append(len(ic10_res[1]))
+            tmp_res_3 = []
+            tmp_res_4 = []
+            for j in range(IC_loop):    
+                ic10_res = independent_cascades(di_g_copy, initial_grp_10[i]["name"])
+                tmp_res_3.append(len(ic10_res[0]))
+                tmp_res_4.append(len(ic10_res[1]))  
+            IC_10[i][1].append(sum(tmp_res_3)/len(tmp_res_3))
+            IC_10[i][2].append(sum(tmp_res_4)/len(tmp_res_4))
         
     result.append(("graf bazowy:", g))
     result.append(("graf z randomowymi krawędziami", g3))
@@ -173,18 +189,41 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1):
     #graphs' plots
     
     #base graph (g)
-    ig.plot(g, **visual_style, mark_groups = True).save(Wyniki/{}/base_graph.png'.format(start_time))
+    ig.plot(g, **visual_style, mark_groups = True).save("Wyniki/{}/base_graph.png".format(start_time))
                                                         
     partition = louvain.find_partition(g, louvain.ModularityVertexPartition)
-    ig.plot(partition, **visual_style, mark_groups = True).save(Wyniki/{}/partition_base_graph.png'.format(start_time))
+    ig.plot(partition, **visual_style, mark_groups = True).save("Wyniki/{}/partition_base_graph.png".format(start_time))
                                                         
     #improved graph (g4)
     partition = louvain.find_partition(g4, louvain.ModularityVertexPartition)
-    ig.plot(g4, **visual_style, mark_groups = True).save(Wyniki/{}/partition_improved_graph.png'.format(start_time))
+    ig.plot(g4, **visual_style, mark_groups = True).save("Wyniki/{}/partition_improved_graph.png".format(start_time))
     
     #activation graph (di_g) (?)
     
-    # # # # # # # # 3 #
+    # # # # # # # # # #
+    #threshold plots
+    thresholds = []
+    above_trsh = []
+    
+    for threshold in np.linspace(min(list_both_sides), max(list_both_sides), 1000):
+        thresholds.append(threshold)
+        above_trsh.append(len([x for x in list_both_sides if x >= threshold]))
+    
+    df_thresholds = pd.DataFrame(data = [thresholds, above_trsh, [x / len(g.vs['name']) for x in above_trsh]], index = ["thresholds", "above_trsh", "ratio"]).T
+    
+    fig, ax = plt.subplots()
+    ax.set(yscale = "log")
+    sns.lineplot(x = "thresholds", y ="ratio", data = df_thresholds, ax = ax)
+    sns.despine()
+    fig.savefig('Wyniki/{}/thresholds_all.png'.format(start_time))
+
+    fig, ax = plt.subplots()
+    ax.set(yscale = "log")
+    sns.lineplot(x = "thresholds", y ="ratio", data = df_thresholds[0:20], ax = ax)
+    sns.despine()
+    fig.savefig('Wyniki/{}/thresholds_first.png'.format(start_time))
+    
+    
     #dataframe modularity
     modularities = pd.DataFrame(data = [list(range(len(rand_edges_mod[1]))) + list(range(len(rand_edges_mod[1]))), rand_edges_mod[1] + best_edges_mod[1], ["random"]*len(rand_edges_mod[1]) + ["best"] * len(best_edges_mod[1])], index = ["index", "modularity", "type"]).T
     modularities.index = modularities.index.astype(int)
@@ -199,30 +238,57 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1):
 
     fig.savefig('Wyniki/{}/modularity_plot.png'.format(start_time))
     
+    #IC_5
     #spread iterations no. dataframe
-    spread = pd.DataFrame(data = [list(range(N+1)) * len(test[13][1]), [y for x in test[13][1] for y in x[1]], [x[0] for x in test[13][1] for _ in range(N+1)]], index = ["index", "spread_iter", "type"]).T
+    spread = pd.DataFrame(data = [list(range(N+1)) * len(IC_5), [y for x in IC_5 for y in x[1]], [x[0] for x in IC_5 for _ in range(N+1)]], index = ["index", "spread_iter", "type"]).T
     spread.index = spread.index.astype(int)
-    spread.spread_iter = spread.spread_iter.astype(int)
+    spread.spread_iter = spread.spread_iter.astype(float)
     
     #spread iterations no. plot
     fig, ax = plt.subplots()
     fig.set_size_inches(23.4, 16.54)
     sns.lineplot(x = "index", y = "spread_iter", data = spread, hue = "type", ax=ax)
     sns.despine()
-    fig.savefig('Wyniki/{}/spread_iterations.png'.format(start_time))
+    fig.savefig('Wyniki/{}/IC5_spread_iterations.png'.format(start_time))
     
     
     #spread range dataframe
-    spread2 = pd.DataFrame(data = [list(range(N+1)) * len(test[13][1]), [y for x in test[13][1] for y in x[2]], [x[0] for x in test[13][1] for _ in range(N+1)]], index = ["index", "spread_range", "type"]).T
+    spread2 = pd.DataFrame(data = [list(range(N+1)) * len(IC_5), [y for x in IC_5 for y in x[2]], [x[0] for x in IC_5 for _ in range(N+1)]], index = ["index", "spread_range", "type"]).T
     spread2.index = spread2.index.astype(int)
-    spread2.spread_range = spread2.spread_range.astype(int)
+    spread2.spread_range = spread2.spread_range.astype(float)
     
     #spread range plot
-     fig, ax = plt.subplots()
+    fig, ax = plt.subplots()
     fig.set_size_inches(23.4, 16.54)
     sns.lineplot(x = "index", y = "spread_range", data = spread2, hue = "type", ax=ax)
     sns.despine()
-    fig.savefig('Wyniki/{}/spread_activations.png'.format(start_time))
+    fig.savefig('Wyniki/{}/IC5_spread_activations.png'.format(start_time))
+    
+    #IC_10
+    #spread iterations no. dataframe
+    spread = pd.DataFrame(data = [list(range(N+1)) * len(IC_10), [y for x in IC_10 for y in x[1]], [x[0] for x in IC_10 for _ in range(N+1)]], index = ["index", "spread_iter", "type"]).T
+    spread.index = spread.index.astype(int)
+    spread.spread_iter = spread.spread_iter.astype(float)
+    
+    #spread iterations no. plot
+    fig, ax = plt.subplots()
+    fig.set_size_inches(23.4, 16.54)
+    sns.lineplot(x = "index", y = "spread_iter", data = spread, hue = "type", ax=ax)
+    sns.despine()
+    fig.savefig('Wyniki/{}/IC10_spread_iterations.png'.format(start_time))
+    
+    
+    #spread range dataframe
+    spread2 = pd.DataFrame(data = [list(range(N+1)) * len(IC_10), [y for x in IC_10 for y in x[2]], [x[0] for x in IC_10 for _ in range(N+1)]], index = ["index", "spread_range", "type"]).T
+    spread2.index = spread2.index.astype(int)
+    spread2.spread_range = spread2.spread_range.astype(float)
+    
+    #spread range plot
+    fig, ax = plt.subplots()
+    fig.set_size_inches(23.4, 16.54)
+    sns.lineplot(x = "index", y = "spread_range", data = spread2, hue = "type", ax=ax)
+    sns.despine()
+    fig.savefig('Wyniki/{}/IC10_spread_activations.png'.format(start_time))
     
     
     return result
@@ -230,33 +296,5 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1):
 
 
 print('start')
-test = wrapper(20, 5, 5, 1)
+output_result = wrapper(threshold = 20, N = 100, groups = 5, step = 5, IC_loop = 100)
     
-N = test[2][1]
-
-#spread iterations no. dataframe
-spread = pd.DataFrame(data = [list(range(N+1)) * len(test[13][1]), [y for x in test[13][1] for y in x[1]], [x[0] for x in test[13][1] for _ in range(N+1)]], index = ["index", "spread_iter", "type"]).T
-spread.index = spread.index.astype(int)
-spread.spread_iter = spread.spread_iter.astype(int)
-
-#spread iterations no. plot
-#sns.set(rc={'figure.figsize':(11.7,8.27)})
-
-sns.set_style('ticks')
-
-
-fig, ax = plt.subplots()
-fig.set_size_inches(23.4, 16.54)
-sns.lineplot(x = "index", y = "spread_iter", data = spread, hue = "type", ax=ax)
-sns.despine()
-fig.savefig('Wyniki/{}/0aa.png'.format(start_time))
-
-#spread range dataframe
-spread2 = pd.DataFrame(data = [list(range(N+1)) * len(test[13][1]), [y for x in test[13][1] for y in x[2]], [x[0] for x in test[13][1] for _ in range(N+1)]], index = ["index", "spread_range", "type"]).T
-spread2.index = spread2.index.astype(int)
-spread2.spread_range = spread2.spread_range.astype(int)
-
-#spread range plot
-plt.figure(figsize = (25, 15))
-sns.relplot(x = "index", y = "spread_range", kind = "line", data = spread2, hue = "type")
-         
