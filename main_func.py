@@ -15,10 +15,17 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import seaborn as sns
 from needed_functions import *              #find_best_new_edges, find_random_new_edges, independent_cascades
+import os
 
 
-def wrapper(threshold = 20, N = 50, groups = 5):
-    result = [('data', datetime.now().strftime("%d-%m-%y %H:%M")), ("threshold", threshold), ("Max nowych krawędzi", N), ("Ile krawędzi jest dodawanych w jednej iteracji:", groups)]
+
+def wrapper(threshold = 20, N = 50, groups = 5, step = 1):
+    start_time = datetime.now().strftime("%d-%m-%y %H:%M")
+    
+    if not os.path.exists('/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/Wyniki/{}'.format(start_time)):
+        os.makedirs('/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/Wyniki/{}'.format(start_time))
+    
+    result = [('data', start_time), ("threshold", threshold), ("Max nowych krawędzi", N), ("Ile krawędzi jest dodawanych w jednej iteracji:", groups)]
     
     #load data
     communication = pd.read_csv("/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/Dane/communication.csv", sep =";")
@@ -68,7 +75,7 @@ def wrapper(threshold = 20, N = 50, groups = 5):
     IC_10 = [("closeness", [], []), ("betweenness", [], []), ("indegree", [], []), ("outdegree", [], []), ("degree", [], [])]
     
     #one loop
-    for n in range(N+1):
+    for n in range(0, N+1, step):
         if n != 0:
             print(datetime.now().strftime("%d-%m-%y %H:%M"), '\n Ukończono: '+str((n - 1)/N*100)+'%')
         g3 = deepcopy(g)
@@ -132,39 +139,124 @@ def wrapper(threshold = 20, N = 50, groups = 5):
     
     txt_res = open("Wyniki/{}.txt".format(datetime.now().strftime("%d-%m-%y %H:%M")), "w")
     for L in result:
-        if type(L) == ig.Graph:
-            txt_res.write(str(L.summary()))
+        if type(L[1]) == ig.Graph:
+            txt_res.write(L[0], str(L[1].summary()))
+            txt_res.write('\n\n')
+        elif ig.VertexSeq in [type(x) for x in L[1]]:
+            txt_res.write(L[0], [x['name'] for x in L[1]])
             txt_res.write('\n\n')
         else:
             txt_res.write(str(L))
             txt_res.write('\n\n')
     txt_res.close()
     
-    return result
+    ###########
+    ## plots ##
+    ###########
     
+    #styles
+    sns.set_style('ticks')
+    
+    #difinig visual style of graphs' plots 
+    color_dict = ['red', 'blue']
+    layout = g.layout("fr") #tree / grid_fr / fr / kk / rt_circular
+    visual_style = {}
+    visual_style["vertex_size"] = 50
+    #visual_style["vertex_color"] = [color_dict[int(x == 0)] for x in g.vs.degree()]
+    visual_style["vertex_label"] = g.vs["name"]
+    visual_style["edge_width"] = 1
+    visual_style["layout"] = layout
+    visual_style["bbox"] = (3000, 2000)
+    visual_style["margin"] = 50
+    
+    # # # # # # # #
+    #graphs' plots
+    
+    #base graph (g)
+    ig.plot(g, **visual_style, mark_groups = True).save(Wyniki/{}/base_graph.png'.format(start_time))
+                                                        
+    partition = louvain.find_partition(g, louvain.ModularityVertexPartition)
+    ig.plot(partition, **visual_style, mark_groups = True).save(Wyniki/{}/partition_base_graph.png'.format(start_time))
+                                                        
+    #improved graph (g4)
+    partition = louvain.find_partition(g4, louvain.ModularityVertexPartition)
+    ig.plot(g4, **visual_style, mark_groups = True).save(Wyniki/{}/partition_improved_graph.png'.format(start_time))
+    
+    #activation graph (di_g) (?)
+    
+    # # # # # # # # 3 #
+    #dataframe modularity
+    modularities = pd.DataFrame(data = [list(range(len(rand_edges_mod[1]))) + list(range(len(rand_edges_mod[1]))), rand_edges_mod[1] + best_edges_mod[1], ["random"]*len(rand_edges_mod[1]) + ["best"] * len(best_edges_mod[1])], index = ["index", "modularity", "type"]).T
+    modularities.index = modularities.index.astype(int)
+    modularities.modularity = modularities.modularity.astype(float)
+    
+    #modularity plot
+    fig, ax = plt.subplots()
+
+    fig.set_size_inches(23.4, 16.54)
+    sns.lineplot(x = "index", y = "modularity", data = modularities, hue = "type", ax=ax)
+    sns.despine() #leaves only bottom and left axis
+
+    fig.savefig('Wyniki/{}/modularity_plot.png'.format(start_time))
+    
+    #spread iterations no. dataframe
+    spread = pd.DataFrame(data = [list(range(N+1)) * len(test[13][1]), [y for x in test[13][1] for y in x[1]], [x[0] for x in test[13][1] for _ in range(N+1)]], index = ["index", "spread_iter", "type"]).T
+    spread.index = spread.index.astype(int)
+    spread.spread_iter = spread.spread_iter.astype(int)
+    
+    #spread iterations no. plot
+    fig, ax = plt.subplots()
+    fig.set_size_inches(23.4, 16.54)
+    sns.lineplot(x = "index", y = "spread_iter", data = spread, hue = "type", ax=ax)
+    sns.despine()
+    fig.savefig('Wyniki/{}/spread_iterations.png'.format(start_time))
+    
+    
+    #spread range dataframe
+    spread2 = pd.DataFrame(data = [list(range(N+1)) * len(test[13][1]), [y for x in test[13][1] for y in x[2]], [x[0] for x in test[13][1] for _ in range(N+1)]], index = ["index", "spread_range", "type"]).T
+    spread2.index = spread2.index.astype(int)
+    spread2.spread_range = spread2.spread_range.astype(int)
+    
+    #spread range plot
+     fig, ax = plt.subplots()
+    fig.set_size_inches(23.4, 16.54)
+    sns.lineplot(x = "index", y = "spread_range", data = spread2, hue = "type", ax=ax)
+    sns.despine()
+    fig.savefig('Wyniki/{}/spread_activations.png'.format(start_time))
+    
+    
+    return result
+###############################################################################
+
+
 print('start')
-test = wrapper(20, 2, 2)
+test = wrapper(20, 5, 5, 1)
     
 N = test[2][1]
-random_edges_mod = test[8][1]
-best_edges_mod = test[9][1]
 
-modularities = pd.DataFrame(data = [test[8][1], test[9][1]], index = ["random_mod", "best_mod"]).T.reset_index()
+#spread iterations no. dataframe
+spread = pd.DataFrame(data = [list(range(N+1)) * len(test[13][1]), [y for x in test[13][1] for y in x[1]], [x[0] for x in test[13][1] for _ in range(N+1)]], index = ["index", "spread_iter", "type"]).T
+spread.index = spread.index.astype(int)
+spread.spread_iter = spread.spread_iter.astype(int)
 
-sns.set_style("whitegrid")
-plt.figure()
-#plt.plot(range(N+1), random_edges_mod, range(N+1), best_edges_mod)
-sns.relplot(x = "index", y = "random_mod", data = modularities, kind = "line")
+#spread iterations no. plot
+#sns.set(rc={'figure.figsize':(11.7,8.27)})
 
-"""
-metrics = ["closeness", "betweenness", "indegree", "outdegree", "degree"]
+sns.set_style('ticks')
 
-plt.figure()
-for metric in metrics:
-    activated = []
-    for res in test[11][1]:
-        if res[0] == metric:
-            activated.append(res[1])
-    plt.plot(range(len(activated)), activated)
-plt.legend(metrics)  
-"""            
+
+fig, ax = plt.subplots()
+fig.set_size_inches(23.4, 16.54)
+sns.lineplot(x = "index", y = "spread_iter", data = spread, hue = "type", ax=ax)
+sns.despine()
+fig.savefig('Wyniki/{}/0aa.png'.format(start_time))
+
+#spread range dataframe
+spread2 = pd.DataFrame(data = [list(range(N+1)) * len(test[13][1]), [y for x in test[13][1] for y in x[2]], [x[0] for x in test[13][1] for _ in range(N+1)]], index = ["index", "spread_range", "type"]).T
+spread2.index = spread2.index.astype(int)
+spread2.spread_range = spread2.spread_range.astype(int)
+
+#spread range plot
+plt.figure(figsize = (25, 15))
+sns.relplot(x = "index", y = "spread_range", kind = "line", data = spread2, hue = "type")
+         
