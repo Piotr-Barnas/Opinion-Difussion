@@ -162,7 +162,8 @@ for k in range(0, len(reportsto['ID'])):
 """
 thresholds = []
 above_trsh = []
-    
+
+
 for threshold in np.linspace(min(list_both_sides), max(list_both_sides), 1000):
     thresholds.append(threshold)
     above_trsh.append(len([x for x in list_both_sides if x >= threshold]))
@@ -189,14 +190,13 @@ plt.show()
 
 g.delete_vertices(ndls_ids) #verices of former emp/tech. acc. deletion
 
-#difinig of plots visual style
+#difinig visual style of graphs' plots 
 color_dict = ['red', 'blue']
 layout = g.layout("fr") #tree / grid_fr / fr / kk / rt_circular
 visual_style = {}
 visual_style["vertex_size"] = 50
 #visual_style["vertex_color"] = [color_dict[int(x == 0)] for x in g.vs.degree()]
 visual_style["vertex_label"] = g.vs["name"]
-#["edge_length"] = 200
 visual_style["edge_width"] = 1
 visual_style["layout"] = layout
 visual_style["bbox"] = (3000, 2000)
@@ -206,12 +206,15 @@ disconnected = [x['name'] for x in g.vs if x.degree() == 0]
 g2 = deepcopy(g)
 g2.delete_vertices(disconnected)
 
-ig.plot(g2, **visual_style).save("/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/initial_graph.png")
+ig.plot(g, **visual_style, mark_groups = True).show()
+
+
+#.save("/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/initial_graph.png")
 
 #partition of base graph
 partition = louvain.find_partition(g2, louvain.ModularityVertexPartition)
 print(partition.quality())
-ig.plot(partition, **visual_style).save("/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/partition_initial_graph.png")
+ig.plot(partition, **visual_style, mark_groups = True).show() #.save("/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/partition_initial_graph.png")
 
 
 

@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from needed_functions import *              #find_best_new_edges, find_random_new_edges, independent_cascades
 import os
+from collections.abc import Iterable
 
 
 
@@ -81,7 +82,7 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     #one loop
     for n in range(0, N+1, step):
         if n != 0:
-            print(datetime.now().strftime("%d-%m-%y %H:%M"), '\n Ukończono: '+str((n - 1)/N*100)+'%')
+            print(datetime.now().strftime("%d-%m-%y %H:%M"), '\n Ukończono: '+str((n - step)/(N)*100)+'%')
         g3 = deepcopy(g)
         random_edges = find_random_new_edges(g3, n)
         rand_edges_mod.append(louvain.find_partition(g3, louvain.ModularityVertexPartition).quality())
@@ -153,19 +154,6 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     result.append(("wyniki modelu IC dla 5% inicjalnych węzłów", IC_5))
     result.append(("wyniki modelu IC dla 10% inicjalnych węzłów", IC_10))
     
-    txt_res = open("Wyniki/{}.txt".format(datetime.now().strftime("%d-%m-%y %H:%M")), "w")
-    for L in result:
-        if type(L[1]) == ig.Graph:
-            txt_res.write(L[0], str(L[1].summary()))
-            txt_res.write('\n\n')
-        elif ig.VertexSeq in [type(x) for x in L[1]]:
-            txt_res.write(L[0], [x['name'] for x in L[1]])
-            txt_res.write('\n\n')
-        else:
-            txt_res.write(str(L))
-            txt_res.write('\n\n')
-    txt_res.close()
-    
     ###########
     ## plots ##
     ###########
@@ -195,8 +183,8 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     ig.plot(partition, **visual_style, mark_groups = True).save("Wyniki/{}/partition_base_graph.png".format(start_time))
                                                         
     #improved graph (g4)
-    partition = louvain.find_partition(g4, louvain.ModularityVertexPartition)
-    ig.plot(g4, **visual_style, mark_groups = True).save("Wyniki/{}/partition_improved_graph.png".format(start_time))
+    partition2 = louvain.find_partition(g4, louvain.ModularityVertexPartition)
+    ig.plot(partition2, **visual_style, mark_groups = True).save("Wyniki/{}/partition_improved_graph.png".format(start_time))
     
     #activation graph (di_g) (?)
     
@@ -225,7 +213,7 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     
     
     #dataframe modularity
-    modularities = pd.DataFrame(data = [list(range(len(rand_edges_mod[1]))) + list(range(len(rand_edges_mod[1]))), rand_edges_mod[1] + best_edges_mod[1], ["random"]*len(rand_edges_mod[1]) + ["best"] * len(best_edges_mod[1])], index = ["index", "modularity", "type"]).T
+    modularities = pd.DataFrame(data = [list(range(len(rand_edges_mod))) + list(range(len(rand_edges_mod))), rand_edges_mod + best_edges_mod, ["random"]*len(rand_edges_mod) + ["best"] * len(best_edges_mod)], index = ["index", "modularity", "type"]).T
     modularities.index = modularities.index.astype(int)
     modularities.modularity = modularities.modularity.astype(float)
     
@@ -290,6 +278,27 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     sns.despine()
     fig.savefig('Wyniki/{}/IC10_spread_activations.png'.format(start_time))
     
+    
+    txt_res = open("Wyniki/{}/wynik_badań.txt".format(start_time), "w")
+    for L in result:
+        if isinstance(L[1], Iterable):
+            if ig.VertexSeq in [type(x) for x in L[1]]:
+                txt_res.write(L[0])
+                for x in L[1]:
+                    txt_res.write(str(x['name']))
+                txt_res.write('\n\n')
+            else:
+                txt_res.write(str(L))
+                txt_res.write('\n\n')
+        else:    
+            if type(L[1]) == ig.Graph:
+                txt_res.write(L[0])
+                txt_res.write(str(L[1].summary()))
+                txt_res.write('\n\n')
+            else:
+                txt_res.write(str(L))
+                txt_res.write('\n\n')
+    txt_res.close()
     
     return result
 ###############################################################################
