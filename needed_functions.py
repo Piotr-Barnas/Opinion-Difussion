@@ -45,7 +45,7 @@ def find_best_new_edges(graph, n = 15, k = 3):
             modularities.append(louvain.find_partition(new_graph, louvain.ModularityVertexPartition).quality())
         if n - i > k:
             for _ in range(k):
-                graph.add_edge(pairs[modularities.index(max(modularities))][0], pairs[modularities.index(max(modularities))][1])
+                graph.add_edge(pairs[modularities.index(max(modularities))][0], pairs[modularities.index(max(modularities))][1], added = 1)
                 best_pairs.append(pairs[modularities.index(max(modularities))])
                 best_modularities.append(louvain.find_partition(graph, louvain.ModularityVertexPartition).quality())
                 pairs.remove(pairs[modularities.index(max(modularities))])
@@ -53,7 +53,7 @@ def find_best_new_edges(graph, n = 15, k = 3):
                 i += 1
         else:
             for _ in range(n - i):
-                graph.add_edge(pairs[modularities.index(max(modularities))][0], pairs[modularities.index(max(modularities))][1])
+                graph.add_edge(pairs[modularities.index(max(modularities))][0], pairs[modularities.index(max(modularities))][1], added = 1)
                 best_pairs.append(pairs[modularities.index(max(modularities))])
                 best_modularities.append(louvain.find_partition(graph, louvain.ModularityVertexPartition).quality())
                 pairs.remove(pairs[modularities.index(max(modularities))])
@@ -72,15 +72,15 @@ def find_random_new_edges(graph, n = 20):
         pairs.remove(pair)
     for rand in np.random.choice(len(pairs) - 1, n, replace = False):
         random_pairs.append(pairs[rand])
-        graph.add_edge(pairs[rand][0], pairs[rand][1])
+        graph.add_edge(pairs[rand][0], pairs[rand][1], added = 1)
     return random_pairs
         
         
     
-        
-    
-
-def independent_cascades(graph, initial):
+def independent_cascades_new(graph, initial):
+    """
+    New edges with activation prob. eq. 
+    """
     k = 0
     arch = [(initial, k)]
     all_influenced = initial
@@ -94,7 +94,40 @@ def independent_cascades(graph, initial):
             for ngbr in [graph.vs.select(x)['name'][0] for x in graph.neighbors(emp, mode = 'out')]:
                 if ngbr not in all_influenced:
                     rand = np.random.uniform()
-                    if rand < graph.es[graph.get_eid(emp, ngbr)]['weights']:
+                    if graph.es[graph.get_eid(emp, ngbr)]['added'] == 0:
+                        if rand < graph.es[graph.get_eid(emp, ngbr)]['weights']:
+                            influenced_in_k.append(ngbr)
+                            all_influenced.append(ngbr)
+                            graph.vs.select(name = ngbr)['influenced'] = 1
+                    elif graph.es[graph.get_eid(emp, ngbr)]['added'] == 1:
+                        if rand < 0.3:
+                            influenced_in_k.append(ngbr)
+                            all_influenced.append(ngbr)
+                            graph.vs.select(name = ngbr)['influenced'] = 1
+        arch.append((influenced_in_k, k))                
+    return arch, all_influenced           
+
+
+
+
+def independent_cascades_all(graph, initial):
+    """
+    New edges with activation prob. eq. 
+    """
+    k = 0
+    arch = [(initial, k)]
+    all_influenced = initial
+    influenced_in_k = initial
+    for emp in initial:
+        graph.vs.select(name = emp)['influenced'] = 1
+    while influenced_in_k != [] and k < 50:
+        k = k + 1
+        influenced_in_k = []
+        for emp in initial:
+            for ngbr in [graph.vs.select(x)['name'][0] for x in graph.neighbors(emp, mode = 'out')]:
+                if ngbr not in all_influenced:
+                    rand = np.random.uniform()
+                    if rand < 0.3:
                         influenced_in_k.append(ngbr)
                         all_influenced.append(ngbr)
                         graph.vs.select(name = ngbr)['influenced'] = 1

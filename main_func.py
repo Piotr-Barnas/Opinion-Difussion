@@ -20,13 +20,13 @@ from collections.abc import Iterable
 
 
 
-def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
+def wrapper(threshold = 20, N = 100, groups = 5, step = 1, IC_loop = 1000):
     start_time = datetime.now().strftime("%d-%m-%y %H:%M")
     
     if not os.path.exists('/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/Wyniki/{}'.format(start_time)):
         os.makedirs('/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/Wyniki/{}'.format(start_time))
     
-    result = [('data', start_time), ("threshold", threshold), ("Max nowych krawędzi", N), ("Ile krawędzi jest dodawanych w jednej iteracji:", groups)]
+    result = [('data', start_time), ("threshold", threshold), ("N = max nowych krawędzi", N), ("Ile krawędzi jest dodawanych w jednej iteracji:", groups), ("Co ile krawędzi iterujemy od 0 do N:", step), ("Liczba iteracji w modelu IC:", IC_loop)]
     
     #load data
     communication = pd.read_csv("/home/barni13/Desktop/Studia/Semestr 7/Praca Dyplomowa/Dane/communication.csv", sep =";")
@@ -65,7 +65,7 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
                 both_sides = mail_counter[k][l] + mail_counter[l][k]
                 list_both_sides.append(both_sides)
                 if both_sides >= threshold:
-                    g.add_edge(str(k), str(l))
+                    g.add_edge(str(k), str(l), added = 0)
     
     ndls_ids = list(reportsto[reportsto['ReportsToID'].isin(['former employee account', 'technical email account - not used by employees'])]['ID'])
     g.delete_vertices(ndls_ids) #verices of former emp/tech. acc. deletion
@@ -76,8 +76,11 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     best_edges_mod = []
     
     
-    IC_5 = [("closeness", [], []), ("betweenness", [], []), ("indegree", [], []), ("outdegree", [], []), ("degree", [], [])]
-    IC_10 = [("closeness", [], []), ("betweenness", [], []), ("indegree", [], []), ("outdegree", [], []), ("degree", [], [])]
+    IC_5_new = [("closeness", [], []), ("betweenness", [], []), ("indegree", [], []), ("outdegree", [], []), ("degree", [], [])]
+    IC_10_new = [("closeness", [], []), ("betweenness", [], []), ("indegree", [], []), ("outdegree", [], []), ("degree", [], [])]
+    
+    IC_5_all = [("closeness", [], []), ("betweenness", [], []), ("indegree", [], []), ("outdegree", [], []), ("degree", [], [])]
+    IC_10_all = [("closeness", [], []), ("betweenness", [], []), ("indegree", [], []), ("outdegree", [], []), ("degree", [], [])]
     
     #one loop
     for n in range(0, N+1, step):
@@ -96,8 +99,8 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
         di_g.add_vertices(list(g4.vs["name"]))
         
         for x in g4.es:
-            di_g.add_edge(x.tuple[0], x.tuple[1], weights = weights[x.tuple[0]][x.tuple[1]])
-            di_g.add_edge(x.tuple[1], x.tuple[0], weights = weights[x.tuple[1]][x.tuple[0]])
+            di_g.add_edge(x.tuple[0], x.tuple[1], weights = weights[x.tuple[0]][x.tuple[1]], added = x["added"])
+            di_g.add_edge(x.tuple[1], x.tuple[0], weights = weights[x.tuple[1]][x.tuple[0]], added = x["added"])
         
         di_g.vs["closeness"] = di_g.closeness()
         di_g.vs["betweenness"] = di_g.betweenness() 
@@ -116,14 +119,26 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
             #selecting initial_grps
             if n == 0:
                 initial_grp_5.append(di_g_copy.vs.select(lambda x:x[metrics[i]] > sorted(di_g.vs[metrics[i]])[-8]))
-            tmp_res_1 = []
-            tmp_res_2 = []
+            #new
+            tmp_res_new_1 = []
+            tmp_res_new_2 = []
+            #all
+            tmp_res_all_1 = []
+            tmp_res_all_2 = []
             for j in range(IC_loop):    
-                ic5_res = independent_cascades(di_g_copy, initial_grp_5[i]["name"])
-                tmp_res_1.append(len(ic5_res[0]))
-                tmp_res_2.append(len(ic5_res[1]))            
-            IC_5[i][1].append(sum(tmp_res_1)/len(tmp_res_1))
-            IC_5[i][2].append(sum(tmp_res_2)/len(tmp_res_2))
+                #new
+                ic5_res_new = independent_cascades_new(di_g_copy, initial_grp_5[i]["name"])
+                tmp_res_new_1.append(len(ic5_res_new[0]))
+                tmp_res_new_2.append(len(ic5_res_new[1]))            
+                #all
+                ic5_res_all = independent_cascades_all(di_g_copy, initial_grp_5[i]["name"])
+                tmp_res_all_1.append(len(ic5_res_all[0]))
+                tmp_res_all_2.append(len(ic5_res_all[1]))
+                
+            IC_5_new[i][1].append(sum(tmp_res_new_1)/len(tmp_res_new_1))
+            IC_5_new[i][2].append(sum(tmp_res_new_2)/len(tmp_res_new_2))
+            IC_5_all[i][1].append(sum(tmp_res_all_1)/len(tmp_res_all_1))
+            IC_5_all[i][2].append(sum(tmp_res_all_2)/len(tmp_res_all_2))
     
         if n == 0:
             initial_grp_10 = []
@@ -133,14 +148,26 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
             #selecting initial_grps
             if n == 0:  
                 initial_grp_10.append(di_g_copy.vs.select(lambda x:x[metrics[i]] > sorted(di_g.vs[metrics[i]])[-16]))
-            tmp_res_3 = []
-            tmp_res_4 = []
-            for j in range(IC_loop):    
-                ic10_res = independent_cascades(di_g_copy, initial_grp_10[i]["name"])
-                tmp_res_3.append(len(ic10_res[0]))
-                tmp_res_4.append(len(ic10_res[1]))  
-            IC_10[i][1].append(sum(tmp_res_3)/len(tmp_res_3))
-            IC_10[i][2].append(sum(tmp_res_4)/len(tmp_res_4))
+            #new
+            tmp_res_new_3 = []
+            tmp_res_new_4 = []
+            #all
+            tmp_res_all_3 = []
+            tmp_res_all_4 = []
+            for j in range(IC_loop):
+                 #new
+                ic10_res_new = independent_cascades_new(di_g_copy, initial_grp_10[i]["name"])
+                tmp_res_new_3.append(len(ic10_res_new[0]))
+                tmp_res_new_4.append(len(ic10_res_new[1]))            
+                #all
+                ic10_res_all = independent_cascades_all(di_g_copy, initial_grp_10[i]["name"])
+                tmp_res_all_3.append(len(ic10_res_all[0]))
+                tmp_res_all_4.append(len(ic10_res_all[1]))
+                
+            IC_10_new[i][1].append(sum(tmp_res_new_3)/len(tmp_res_new_3))
+            IC_10_new[i][2].append(sum(tmp_res_new_4)/len(tmp_res_new_4))
+            IC_10_all[i][1].append(sum(tmp_res_all_3)/len(tmp_res_all_3))
+            IC_10_all[i][2].append(sum(tmp_res_all_4)/len(tmp_res_all_4))
         
     result.append(("graf bazowy:", g))
     result.append(("graf z randomowymi krawędziami", g3))
@@ -151,8 +178,10 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     result.append(("Miary:", metrics))
     result.append(("Grupa inizializująca dla 5% próby", initial_grp_5))
     result.append(("Grupa inizializująca dla 10% próby", initial_grp_10))
-    result.append(("wyniki modelu IC dla 5% inicjalnych węzłów", IC_5))
-    result.append(("wyniki modelu IC dla 10% inicjalnych węzłów", IC_10))
+    result.append(("wyniki modelu IC dla 5% inicjalnych węzłów (nowe)", IC_5_new))
+    result.append(("wyniki modelu IC dla 10% inicjalnych węzłów (nowe)", IC_10_new))
+    result.append(("wyniki modelu IC dla 5% inicjalnych węzłów (wszystkie)", IC_5_all))
+    result.append(("wyniki modelu IC dla 10% inicjalnych węzłów (wszystkiue)", IC_10_all))
     
     ###########
     ## plots ##
@@ -200,12 +229,14 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     df_thresholds = pd.DataFrame(data = [thresholds, above_trsh, [x / len(g.vs['name']) for x in above_trsh]], index = ["thresholds", "above_trsh", "ratio"]).T
     
     fig, ax = plt.subplots()
+    fig.set_size_inches(23.4, 16.54)
     ax.set(yscale = "log")
     sns.lineplot(x = "thresholds", y ="ratio", data = df_thresholds, ax = ax)
     sns.despine()
     fig.savefig('Wyniki/{}/thresholds_all.png'.format(start_time))
 
     fig, ax = plt.subplots()
+    fig.set_size_inches(23.4, 16.54)
     ax.set(yscale = "log")
     sns.lineplot(x = "thresholds", y ="ratio", data = df_thresholds[0:20], ax = ax)
     sns.despine()
@@ -213,7 +244,7 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     
     
     #dataframe modularity
-    modularities = pd.DataFrame(data = [list(range(len(rand_edges_mod))) + list(range(len(rand_edges_mod))), rand_edges_mod + best_edges_mod, ["random"]*len(rand_edges_mod) + ["best"] * len(best_edges_mod)], index = ["index", "modularity", "type"]).T
+    modularities = pd.DataFrame(data = [list(range(0, N+1, step)) * 2, rand_edges_mod + best_edges_mod, ["random"]*len(rand_edges_mod) + ["best"] * len(best_edges_mod)], index = ["index", "modularity", "type"]).T
     modularities.index = modularities.index.astype(int)
     modularities.modularity = modularities.modularity.astype(float)
     
@@ -226,9 +257,11 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
 
     fig.savefig('Wyniki/{}/modularity_plot.png'.format(start_time))
     
-    #IC_5
+    #NEW
+    
+    #IC_5_new
     #spread iterations no. dataframe
-    spread = pd.DataFrame(data = [list(range(N+1)) * len(IC_5), [y for x in IC_5 for y in x[1]], [x[0] for x in IC_5 for _ in range(N+1)]], index = ["index", "spread_iter", "type"]).T
+    spread = pd.DataFrame(data = [list(range(0, N+1, step)) * len(IC_5_new), [y for x in IC_5_new for y in x[1]], [x[0] for x in IC_5_new for _ in range(0, N+1, step)]], index = ["index", "spread_iter", "type"]).T
     spread.index = spread.index.astype(int)
     spread.spread_iter = spread.spread_iter.astype(float)
     
@@ -237,11 +270,11 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     fig.set_size_inches(23.4, 16.54)
     sns.lineplot(x = "index", y = "spread_iter", data = spread, hue = "type", ax=ax)
     sns.despine()
-    fig.savefig('Wyniki/{}/IC5_spread_iterations.png'.format(start_time))
+    fig.savefig('Wyniki/{}/IC5_new_spread_iterations.png'.format(start_time))
     
     
     #spread range dataframe
-    spread2 = pd.DataFrame(data = [list(range(N+1)) * len(IC_5), [y for x in IC_5 for y in x[2]], [x[0] for x in IC_5 for _ in range(N+1)]], index = ["index", "spread_range", "type"]).T
+    spread2 = pd.DataFrame(data = [list(range(0, N+1, step)) * len(IC_5_new), [y for x in IC_5_new for y in x[2]], [x[0] for x in IC_5_new for _ in range(0, N+1, step)]], index = ["index", "spread_range", "type"]).T
     spread2.index = spread2.index.astype(int)
     spread2.spread_range = spread2.spread_range.astype(float)
     
@@ -250,11 +283,11 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     fig.set_size_inches(23.4, 16.54)
     sns.lineplot(x = "index", y = "spread_range", data = spread2, hue = "type", ax=ax)
     sns.despine()
-    fig.savefig('Wyniki/{}/IC5_spread_activations.png'.format(start_time))
+    fig.savefig('Wyniki/{}/IC5_new_spread_activations.png'.format(start_time))
     
-    #IC_10
+    #IC_10_new
     #spread iterations no. dataframe
-    spread = pd.DataFrame(data = [list(range(N+1)) * len(IC_10), [y for x in IC_10 for y in x[1]], [x[0] for x in IC_10 for _ in range(N+1)]], index = ["index", "spread_iter", "type"]).T
+    spread = pd.DataFrame(data = [list(range(0, N+1, step)) * len(IC_10_new), [y for x in IC_10_new for y in x[1]], [x[0] for x in IC_10_new for _ in range(0, N+1, step)]], index = ["index", "spread_iter", "type"]).T
     spread.index = spread.index.astype(int)
     spread.spread_iter = spread.spread_iter.astype(float)
     
@@ -263,11 +296,11 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     fig.set_size_inches(23.4, 16.54)
     sns.lineplot(x = "index", y = "spread_iter", data = spread, hue = "type", ax=ax)
     sns.despine()
-    fig.savefig('Wyniki/{}/IC10_spread_iterations.png'.format(start_time))
+    fig.savefig('Wyniki/{}/IC10_new_spread_iterations.png'.format(start_time))
     
     
     #spread range dataframe
-    spread2 = pd.DataFrame(data = [list(range(N+1)) * len(IC_10), [y for x in IC_10 for y in x[2]], [x[0] for x in IC_10 for _ in range(N+1)]], index = ["index", "spread_range", "type"]).T
+    spread2 = pd.DataFrame(data = [list(range(0, N+1, step)) * len(IC_10_new), [y for x in IC_10_new for y in x[2]], [x[0] for x in IC_10_new for _ in range(0, N+1, step)]], index = ["index", "spread_range", "type"]).T
     spread2.index = spread2.index.astype(int)
     spread2.spread_range = spread2.spread_range.astype(float)
     
@@ -276,9 +309,91 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
     fig.set_size_inches(23.4, 16.54)
     sns.lineplot(x = "index", y = "spread_range", data = spread2, hue = "type", ax=ax)
     sns.despine()
-    fig.savefig('Wyniki/{}/IC10_spread_activations.png'.format(start_time))
+    fig.savefig('Wyniki/{}/IC10_new_spread_activations.png'.format(start_time))
+    
+    #spread vs mod.
+    spread_n = [x[0] for x in IC_10_new] 
+    spread_v = [x[2] for x in IC_10_new]
+    modularity = [best_edges_mod]
+    sm = pd.DataFrame( data = spread_v + modularity, index = spread_n + ['modularity']).T
+    sm = sm.melt('modularity', var_name='cols', value_name='vals')
+
+    
+    fig, ax = plt.subplots()
+    fig.set_size_inches(23.4, 16.54)
+    sns.scatterplot(x="modularity", y="vals", hue='cols', data=sm, ax = ax)
+    sns.despine()
+    fig.savefig('Wyniki/{}/IC10_new_spread_vs_mod'.format(start_time))
+    
+    #ALL
+    
+    #IC_5_all
+    #spread iterations no. dataframe
+    spread = pd.DataFrame(data = [list(range(0, N+1, step)) * len(IC_5_all), [y for x in IC_5_all for y in x[1]], [x[0] for x in IC_5_all for _ in range(0, N+1, step)]], index = ["index", "spread_iter", "type"]).T
+    spread.index = spread.index.astype(int)
+    spread.spread_iter = spread.spread_iter.astype(float)
+    
+    #spread iterations no. plot
+    fig, ax = plt.subplots()
+    fig.set_size_inches(23.4, 16.54)
+    sns.lineplot(x = "index", y = "spread_iter", data = spread, hue = "type", ax=ax)
+    sns.despine()
+    fig.savefig('Wyniki/{}/IC5_all_spread_iterations.png'.format(start_time))
     
     
+    #spread range dataframe
+    spread2 = pd.DataFrame(data = [list(range(0, N+1, step)) * len(IC_5_all), [y for x in IC_5_all for y in x[2]], [x[0] for x in IC_5_all for _ in range(0, N+1, step)]], index = ["index", "spread_range", "type"]).T
+    spread2.index = spread2.index.astype(int)
+    spread2.spread_range = spread2.spread_range.astype(float)
+    
+    #spread range plot
+    fig, ax = plt.subplots()
+    fig.set_size_inches(23.4, 16.54)
+    sns.lineplot(x = "index", y = "spread_range", data = spread2, hue = "type", ax=ax)
+    sns.despine()
+    fig.savefig('Wyniki/{}/IC5_all_spread_activations.png'.format(start_time))
+    
+    #IC_10_all
+    #spread iterations no. dataframe
+    spread = pd.DataFrame(data = [list(range(0, N+1, step)) * len(IC_10_all), [y for x in IC_10_all for y in x[1]], [x[0] for x in IC_10_all for _ in range(0, N+1, step)]], index = ["index", "spread_iter", "type"]).T
+    spread.index = spread.index.astype(int)
+    spread.spread_iter = spread.spread_iter.astype(float)
+    
+    #spread iterations no. plot
+    fig, ax = plt.subplots()
+    fig.set_size_inches(23.4, 16.54)
+    sns.lineplot(x = "index", y = "spread_iter", data = spread, hue = "type", ax=ax)
+    sns.despine()
+    fig.savefig('Wyniki/{}/IC10_all_spread_iterations.png'.format(start_time))
+    
+    
+    #spread range dataframe
+    spread2 = pd.DataFrame(data = [list(range(0, N+1, step)) * len(IC_10_all), [y for x in IC_10_all for y in x[2]], [x[0] for x in IC_10_all for _ in range(0, N+1, step)]], index = ["index", "spread_range", "type"]).T
+    spread2.index = spread2.index.astype(int)
+    spread2.spread_range = spread2.spread_range.astype(float)
+    
+    #spread range plot
+    fig, ax = plt.subplots()
+    fig.set_size_inches(23.4, 16.54)
+    sns.lineplot(x = "index", y = "spread_range", data = spread2, hue = "type", ax=ax)
+    sns.despine()
+    fig.savefig('Wyniki/{}/IC10_all_spread_activations.png'.format(start_time))
+    
+    #spread vs mod.
+    spread_n = [x[0] for x in IC_10_all] 
+    spread_v = [x[2] for x in IC_10_all]
+    modularity = [best_edges_mod]
+    sm = pd.DataFrame( data = spread_v + modularity, index = spread_n + ['modularity']).T
+    sm = sm.melt('modularity', var_name='cols', value_name='vals')
+
+    
+    fig, ax = plt.subplots()
+    fig.set_size_inches(23.4, 16.54)
+    sns.scatterplot(x="modularity", y="vals", hue='cols', data=sm, ax = ax)
+    sns.despine()
+    fig.savefig('Wyniki/{}/IC10_all_spread_vs_mod'.format(start_time))
+    
+   
     txt_res = open("Wyniki/{}/wynik_badań.txt".format(start_time), "w")
     for L in result:
         if isinstance(L[1], Iterable):
@@ -305,5 +420,18 @@ def wrapper(threshold = 20, N = 50, groups = 5, step = 1, IC_loop = 100):
 
 
 print('start')
-output_result = wrapper(threshold = 20, N = 100, groups = 5, step = 5, IC_loop = 100)
-    
+output_result = wrapper(threshold = 10, N = 250, groups = 10, step = 25, IC_loop = 100)
+
+"""
+spread_n = [x[0] for x in output_result[14][1]] #output_result[14][1] == IC_10
+spread_v = [x[2] for x in output_result[14][1]]
+modularity = [output_result[9][1]] #output_result[9][1] == best_edges_mod
+
+sm = pd.DataFrame( data = spread + modularity, index = spread_n + ['modularity']).T
+
+plt.figure()
+for i in spread_n:
+    sns.scatterplot(x="modularity", y = i, data=sm)
+#sm = sm.melt('modularity', var_name='cols', value_name='vals')
+#sns.scatterplot(x="modularity", y="vals", hue='cols', data=sm)
+"""
