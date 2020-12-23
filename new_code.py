@@ -97,22 +97,22 @@ for k in range(0, len(reportsto['ID'])):
 g.delete_vertices(ndls_ids) #verices of former emp/tech. acc. deletion
 
 #difinig of plots visual style
-layout = g.layout("tree") #tree / grid_fr      kk (?)
-visual_style = {}
-visual_style["vertex_size"] = 20
+#layout = g.layout("tree") #tree / grid_fr      kk (?)
+#visual_style = {}
+#visual_style["vertex_size"] = 20
 #visual_style["vertex_color"] = [color_dict[gender] for gender in g.vs["gender"]]
 #visual_style["vertex_label"] = g.vs["name"]
 #visual_style["edge_width"] = [1 + 2 * int(is_formal) for is_formal in g.es["is_formal"]]
-visual_style["layout"] = layout
-visual_style["bbox"] = (1200, 1200)
-visual_style["margin"] = 20
+#visual_style["layout"] = layout
+#visual_style["bbox"] = (1200, 1200)
+#visual_style["margin"] = 20
 
-ig.plot(g, **visual_style).show()
+#ig.plot(g, **visual_style).show()
 
 #partition of base graph
-partition = la.find_partition(g, la.ModularityVertexPartition)
-print(partition.modularity)
-ig.plot(partition, **visual_style).show()
+#partition = la.find_partition(g, la.ModularityVertexPartition)
+#print(partition.modularity)
+#ig.plot(partition, **visual_style).show()
 
 """
 #edge appending
@@ -128,4 +128,4 @@ max(modularities)
 pairs[modularities.index(max(modularities))]
 """
 
-find_best_new_edge(g, 1)
+#find_best_new_edge(g, 1)

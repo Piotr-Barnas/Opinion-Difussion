@@ -1,0 +1,38 @@
+('data', '22-12-20 19:29')
+
+('threshold', 10)
+
+('N = max nowych krawędzi', 10)
+
+('Ile krawędzi jest dodawanych w jednej iteracji:', 10)
+
+('Co ile krawędzi iterujemy od 0 do N:', 10)
+
+('Liczba iteracji w modelu IC:', 100)
+
+graf bazowy:IGRAPH UN-- 154 1104 -- 
++ attr: name (v), added (e)
+
+graf z randomowymi krawędziamiIGRAPH UN-- 154 1124 -- 
++ attr: name (v), added (e)
+
+graf z najlepszymi krawędziamiIGRAPH UN-- 154 1124 -- 
++ attr: name (v), added (e)
+
+digraf bazowy:IGRAPH DN-- 154 2248 -- 
++ attr: betweenness (v), closeness (v), degree (v), indegree (v), name (v), outdegree (v), added (e), weights (e)
+
+('modularność grafu z randomowymi krawędziami', [0.2728078897917479, 0.2500083110649561])
+
+('modularność grafu z najlepszymi krawędziami', [0.26623977837156604, 0.2678513759957447])
+
+('Miary:', ['indegree', 'outdegree', 'degree'])
+
+Grupa inizializująca dla 5% próby['16', '38', '44', '132', '135', '151', '165']['16', '38', '44', '132', '135', '151', '165']['16', '38', '44', '132', '135', '151', '165']
+
+Grupa inizializująca dla 10% próby['7', '16', '35', '38', '44', '61', '84', '89', '102', '132', '135', '147', '151', '165']['7', '16', '35', '38', '44', '61', '84', '89', '102', '132', '135', '147', '151', '165']['7', '16', '35', '38', '44', '61', '84', '89', '102', '132', '135', '147', '151', '165']
+
+('wyniki modelu IC dla 5% inicjalnych węzłów (nowe)', [('indegree', [6.96, 6.96], [18.66, 18.81]), ('outdegree', [7.09, 6.75], [18.73, 18.39]), ('degree', [6.53, 6.57], [17.37, 18.01])])
+
+('wyniki modelu IC dla 10% inicjalnych węzłów (nowe)', [('indegree', [7.86, 7.15], [30.75, 28.97]), ('outdegree', [7.3, 7.82], [29.13, 30.95]), ('degree', [7.27, 7.53], [29.18, 30.05])])
+

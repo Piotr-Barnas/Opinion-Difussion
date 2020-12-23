@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec  8 20:32:31 2020
+Created on Tue Dec 22 16:20:10 2020
 
 @author: barni13
 """
+
 from datetime import datetime
 import pandas as pd
 import igraph as ig
@@ -91,16 +92,11 @@ def independent_cascades_new(graph, initial):
             for ngbr in [graph.vs.select(x)['name'][0] for x in graph.neighbors(emp, mode = 'out')]:
                 if ngbr not in all_influenced:
                     rand = np.random.uniform()
-                    if graph.es[graph.get_eid(emp, ngbr)]['added'] == 0:
-                        if rand < graph.es[graph.get_eid(emp, ngbr)]['weights']:
-                            influenced_in_k.append(ngbr)
-                            all_influenced.append(ngbr)
-                            graph.vs.select(name = ngbr)['influenced'] = 1
-                    elif graph.es[graph.get_eid(emp, ngbr)]['added'] == 1:
-                        if rand < 0.25:
-                            influenced_in_k.append(ngbr)
-                            all_influenced.append(ngbr)
-                            graph.vs.select(name = ngbr)['influenced'] = 1
+                    if rand < graph.es[graph.get_eid(emp, ngbr)]['weights']:
+                        influenced_in_k.append(ngbr)
+                        all_influenced.append(ngbr)
+                        graph.vs.select(name = ngbr)['influenced'] = 1
+                
         arch.append((influenced_in_k, k))                
     return arch, all_influenced           
 

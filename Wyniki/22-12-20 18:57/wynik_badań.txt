@@ -1,0 +1,38 @@
+('data', '22-12-20 18:57')
+
+('threshold', 10)
+
+('N = max nowych krawędzi', 10)
+
+('Ile krawędzi jest dodawanych w jednej iteracji:', 10)
+
+('Co ile krawędzi iterujemy od 0 do N:', 10)
+
+('Liczba iteracji w modelu IC:', 100)
+
+graf bazowy:IGRAPH UN-- 154 1104 -- 
++ attr: name (v), added (e)
+
+graf z randomowymi krawędziamiIGRAPH UN-- 154 1124 -- 
++ attr: name (v), added (e)
+
+graf z najlepszymi krawędziamiIGRAPH UN-- 154 1124 -- 
++ attr: name (v), added (e)
+
+digraf bazowy:IGRAPH DN-- 154 2248 -- 
++ attr: betweenness (v), closeness (v), degree (v), indegree (v), name (v), outdegree (v), added (e), weights (e)
+
+('modularność grafu z randomowymi krawędziami', [0.2708107036606081, 0.2626735825280835])
+
+('modularność grafu z najlepszymi krawędziami', [0.27874908541203997, 0.2576430136396449])
+
+('Miary:', ['closeness', 'betweenness', 'indegree', 'outdegree', 'degree'])
+
+Grupa inizializująca dla 5% próby['16', '38', '132', '135', '151', '165']['16', '38', '44', '89', '109', '135', '165']['16', '38', '44', '132', '135', '151', '165']['16', '38', '44', '132', '135', '151', '165']['16', '38', '44', '132', '135', '151', '165']
+
+Grupa inizializująca dla 10% próby['16', '38', '44', '61', '68', '84', '89', '96', '102', '132', '135', '147', '151', '155', '165']['10', '16', '34', '38', '44', '89', '96', '109', '113', '116', '132', '135', '147', '151', '165']['7', '16', '35', '38', '44', '61', '84', '89', '102', '132', '135', '147', '151', '165']['7', '16', '35', '38', '44', '61', '84', '89', '102', '132', '135', '147', '151', '165']['7', '16', '35', '38', '44', '61', '84', '89', '102', '132', '135', '147', '151', '165']
+
+('wyniki modelu IC dla 5% inicjalnych węzłów (nowe)', [('closeness', [5.64, 6.35], [14.04, 15.53]), ('betweenness', [6.7, 7.76], [17.72, 21.37]), ('indegree', [6.41, 6.65], [16.91, 18.03]), ('outdegree', [7.04, 6.65], [18.01, 18.54]), ('degree', [5.98, 6.2], [16.32, 17.19])])
+
+('wyniki modelu IC dla 10% inicjalnych węzłów (nowe)', [('closeness', [6.69, 6.96], [26.43, 27.03]), ('betweenness', [8.47, 8.61], [32.84, 35.69]), ('indegree', [7.46, 8.74], [28.92, 33.63]), ('outdegree', [6.82, 8.43], [28.06, 32.93]), ('degree', [7.27, 8.62], [28.33, 33.35])])
+
