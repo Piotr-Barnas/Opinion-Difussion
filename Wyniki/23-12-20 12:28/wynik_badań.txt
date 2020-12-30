@@ -1,0 +1,44 @@
+('data', '23-12-20 12:28')
+
+('threshold', 10)
+
+('N = max nowych krawędzi', 250)
+
+('Ile krawędzi jest dodawanych w jednej iteracji:', 25)
+
+('Co ile krawędzi iterujemy od 0 do N:', 50)
+
+('Liczba iteracji w modelu IC:', 1000)
+
+graf bazowy:IGRAPH UN-- 154 1104 -- 
++ attr: name (v), added (e)
+
+graf z randomowymi krawędziamiIGRAPH UN-- 154 1354 -- 
++ attr: name (v), added (e)
+
+graf z najlepszymi krawędziamiIGRAPH UN-- 154 1354 -- 
++ attr: name (v), added (e)
+
+digraf bazowy:IGRAPH DN-- 154 2708 -- 
++ attr: degree (v), indegree (v), name (v), outdegree (v), added (e), weights (e)
+
+graf z randomowymi krawędziamiIGRAPH DN-- 154 2708 -- 
++ attr: degree (v), indegree (v), influenced (v), name (v), outdegree (v), added (e), weights (e)
+
+graf z najlepszymi krawędziamiIGRAPH DN-- 154 2708 -- 
++ attr: degree (v), indegree (v), influenced (v), name (v), outdegree (v), added (e), weights (e)
+
+('modularność grafu z randomowymi krawędziami', [0.2645013685412729, 0.26199993091620133, 0.25637375691217534, 0.24911225068616155, 0.24357510162219126, 0.2540385836375181])
+
+('modularność grafu z najlepszymi krawędziami', [0.26029687828187353, 0.2764260548044778, 0.2892200417213938, 0.2927944771309163, 0.34005708014979863, 0.35625227729425807])
+
+('Miary:', ['indegree', 'outdegree', 'degree'])
+
+Grupa inizializująca dla 10% próby (losowy graf)['7', '16', '35', '38', '44', '61', '84', '89', '102', '132', '135', '147', '151', '165']['7', '16', '35', '38', '44', '61', '84', '89', '102', '132', '135', '147', '151', '165']['7', '16', '35', '38', '44', '61', '84', '89', '102', '132', '135', '147', '151', '165']
+
+Grupa inizializująca dla 10% próby (najlepszy graf)['7', '16', '35', '38', '44', '61', '84', '89', '102', '132', '135', '147', '151', '165']['7', '16', '35', '38', '44', '61', '84', '89', '102', '132', '135', '147', '151', '165']['7', '16', '35', '38', '44', '61', '84', '89', '102', '132', '135', '147', '151', '165']
+
+('wyniki modelu IC dla 10% inicjalnych węzłów (losowy)', [('indegree', [7.259, 14.111, 16.963, 14.676, 12.178, 10.676], [28.264, 62.657, 110.957, 132.908, 142.78, 147.535]), ('outdegree', [7.171, 13.765, 16.868, 14.795, 12.153, 10.724], [28.212, 62.003, 110.647, 133.039, 142.787, 147.687]), ('degree', [7.234, 14.084, 16.854, 14.69, 12.134, 10.75], [28.233, 62.905, 110.591, 132.907, 142.746, 147.638])])
+
+('wyniki modelu IC dla 10% inicjalnych węzłów (najlepszy)', [('indegree', [7.278, 14.951, 18.014, 15.169, 13.606, 13.263], [28.42, 64.631, 107.867, 128.624, 136.699, 136.59]), ('outdegree', [7.512, 14.788, 18.052, 15.339, 13.523, 13.233], [28.789, 64.582, 107.882, 128.814, 136.751, 136.546]), ('degree', [7.176, 14.625, 17.997, 15.231, 13.595, 13.203], [28.268, 64.151, 107.69, 128.761, 136.957, 136.625])])
+

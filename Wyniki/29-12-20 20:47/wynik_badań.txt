@@ -1,0 +1,44 @@
+('data', '29-12-20 20:47')
+
+('threshold', 10)
+
+('N = max nowych krawędzi', 10)
+
+('Ile krawędzi jest dodawanych w jednej iteracji:', 5)
+
+('Co ile krawędzi iterujemy od 0 do N:', 5)
+
+('Liczba iteracji w modelu IC:', 10)
+
+graf bazowy:IGRAPH UN-- 154 1104 -- 
++ attr: C_degree (v), name (v), added (e)
+
+graf z randomowymi krawędziamiIGRAPH UN-- 154 1114 -- 
++ attr: C_degree (v), name (v), added (e)
+
+graf z najlepszymi krawędziamiIGRAPH UN-- 154 1114 -- 
++ attr: C_degree (v), name (v), added (e)
+
+digraf bazowy:IGRAPH DN-- 154 2228 -- 
++ attr: C_degree (v), degree (v), membership (v), name (v), added (e), weights (e)
+
+graf z randomowymi krawędziamiIGRAPH DN-- 154 2228 -- 
++ attr: C_degree (v), degree (v), influenced (v), membership (v), name (v), added (e), weights (e)
+
+graf z najlepszymi krawędziamiIGRAPH DN-- 154 2228 -- 
++ attr: C_degree (v), degree (v), influenced (v), membership (v), name (v), added (e), weights (e)
+
+('modularność grafu z randomowymi krawędziami', [0.26486729744276416, 0.2702119148112704, 0.2668513838884251])
+
+('modularność grafu z najlepszymi krawędziami', [0.26896102446964926, 0.27160148014320085, 0.26294363559592454])
+
+('Miary:', ['degree', 'degree2', 'C_degree'])
+
+Grupa inizializująca dla 10% próby (losowy graf)['7', '16', '35', '38', '44', '46', '61', '82', '84', '89', '102', '132', '135', '147', '151', '165'][]['10', '16', '35', '36', '38', '44', '46', '51', '68', '82', '84', '89', '96', '116', '117', '132', '134', '135', '147', '151']
+
+Grupa inizializująca dla 10% próby (najlepszy graf)['7', '16', '35', '38', '44', '46', '61', '82', '84', '89', '102', '132', '135', '147', '151', '165'][]['10', '16', '35', '36', '38', '44', '46', '51', '68', '82', '84', '89', '96', '116', '117', '132', '134', '135', '147', '151']
+
+('wyniki modelu IC dla 10% inicjalnych węzłów (losowy)', [('degree', [3.4, 3.5, 3.5], [21.4, 22.5, 21.8]), ('degree2', [1.0, 1.0, 1.0], [0.0, 0.0, 0.0]), ('C_degree', [3.2, 3.2, 3.6], [24.7, 23.1, 25.1])])
+
+('wyniki modelu IC dla 10% inicjalnych węzłów (najlepszy)', [('degree', [3.2, 3.2, 3.6], [22.1, 20.6, 22.5]), ('degree2', [1.0, 1.0, 1.0], [0.0, 0.0, 0.0]), ('C_degree', [3.3, 3.0, 3.4], [24.3, 23.7, 25.3])])
+
